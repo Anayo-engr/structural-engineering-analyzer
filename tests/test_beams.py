@@ -91,7 +91,7 @@ def test_design_load():
 
         = 1.35(10) + 1.50(5)
 
-        = 20 kN/m
+        = 21 kN/m
     """
 
     result = calculate_design_load(
@@ -99,7 +99,7 @@ def test_design_load():
         live_load=5
     )
 
-    assert result == 20.0
+    assert result == 21.0
 
 
 # =========================================================
@@ -117,10 +117,12 @@ def test_support_reactions():
           = 60 kN
     """
 
-    left, right = calculate_support_reactions(
+    result = calculate_support_reactions(
         load=20,
         span=6
     )
+
+    left, right = result
 
     assert left == 60
     assert right == 60
@@ -328,16 +330,30 @@ def test_complete_beam_calculation():
 
     # Check loads.
     assert result["loads"]["service_load_kN_per_m"] == 15
-    assert result["loads"]["design_load_kN_per_m"] == 20
+    assert result["loads"]["design_load_kN_per_m"] == 21.0
 
     # Check structural analysis.
-    assert result["analysis"]["left_reaction_kN"] == 60
-    assert result["analysis"]["right_reaction_kN"] == 60
-    assert result["analysis"]["maximum_shear_kN"] == 60
-    assert result["analysis"]["maximum_bending_moment_kNm"] == 90
+    #
+    # w = 21 kN/m
+    # L = 6 m
+    #
+    # R = wL/2
+    #   = 21 × 6 / 2
+    #   = 63 kN
+    #
+    # Vmax = 63 kN
+    #
+    # Mmax = wL²/8
+    #      = 21 × 6² / 8
+    #      = 94.5 kNm
+
+    assert result["analysis"]["left_reaction_kN"] == 63
+    assert result["analysis"]["right_reaction_kN"] == 63
+    assert result["analysis"]["maximum_shear_kN"] == 63
+    assert result["analysis"]["maximum_bending_moment_kNm"] == 94.5
 
     # Check bending design.
-    assert result["design"]["design_bending_moment_kNm"] == 90
+    assert result["design"]["design_bending_moment_kNm"] == 94.5
 
     # Check reinforcement.
     assert result["reinforcement"]["provided_steel_area_mm2"] > 0
