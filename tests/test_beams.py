@@ -10,23 +10,23 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from calculations.beams.beam_loads import (
+from calculations.beam.beam_loads import (
     calculate_total_load,
     calculate_design_load
 )
 
-from calculations.beams.beam_analysis import (
+from calculations.beam.beam_analysis import (
     calculate_support_reactions,
     calculate_max_shear,
     calculate_max_bending_moment
 )
 
-from calculations.beams.beam_design import (
+from calculations.beam.beam_design import (
     calculate_effective_depth,
     calculate_required_steel_area
 )
 
-from calculations.beams.beam_reinforcement import (
+from calculations.beam.beam_reinforcement import (
     calculate_bar_area,
     calculate_provided_steel_area,
     calculate_required_number_of_bars
@@ -244,7 +244,7 @@ def test_zero_span_rejected():
     except ValueError:
         assert True
 
-from calculations.beams.beam_calculator import calculate_beam
+from calculations.beam.beam_calculator import calculate_beam
 
 
 def test_complete_beam_calculation():
