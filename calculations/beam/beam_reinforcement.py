@@ -2,24 +2,29 @@
 Structural Engineering Analyzer
 Beam Reinforcement Module
 
-This module converts a required reinforcement area into
-practical reinforcement bar arrangements.
+Preliminary reinforced-concrete beam reinforcement calculations.
 
 Design basis:
 - Reinforced concrete beam
-- Preliminary Eurocode-oriented detailing
+- Eurocode-oriented preliminary detailing
 - Main longitudinal reinforcement
 - Shear links/stirrups
 
-Final reinforcement detailing must be checked against
-the applicable design code and project requirements.
+IMPORTANT:
+This module is a preliminary calculation component.
+Final reinforcement detailing must be checked against the
+applicable design code, structural drawings, anchorage,
+development length, lap requirements, congestion,
+and project conditions by a qualified structural engineer.
 """
-
 
 import math
 
 
-# Common reinforcement bar diameters in mm.
+# =========================================================
+# AVAILABLE REINFORCEMENT DIAMETERS
+# =========================================================
+
 AVAILABLE_BAR_DIAMETERS = [
     8,
     10,
@@ -32,19 +37,18 @@ AVAILABLE_BAR_DIAMETERS = [
 ]
 
 
+# =========================================================
+# BAR AREA
+# =========================================================
+
 def calculate_bar_area(bar_diameter):
     """
     Calculate the cross-sectional area of one reinforcement bar.
 
-    Formula:
-
         Abar = πØ² / 4
 
-    Parameters:
-        bar_diameter (float): Bar diameter in mm
-
     Returns:
-        float: Area of one bar in mm²
+        float: Bar area in mm².
     """
 
     if bar_diameter <= 0:
@@ -52,26 +56,28 @@ def calculate_bar_area(bar_diameter):
             "Bar diameter must be greater than zero."
         )
 
-    return math.pi * bar_diameter ** 2 / 4
+    return (
+        math.pi
+        * bar_diameter ** 2
+        / 4
+    )
 
+
+# =========================================================
+# PROVIDED STEEL AREA
+# =========================================================
 
 def calculate_provided_steel_area(
     number_of_bars,
     bar_diameter
 ):
     """
-    Calculate the total steel area provided by a group of bars.
-
-    Formula:
+    Calculate total reinforcement area.
 
         As,prov = n × Abar
 
-    Parameters:
-        number_of_bars (int): Number of reinforcement bars
-        bar_diameter (float): Bar diameter in mm
-
     Returns:
-        float: Provided steel area in mm²
+        float: Provided steel area in mm².
     """
 
     if number_of_bars < 1:
@@ -84,25 +90,28 @@ def calculate_provided_steel_area(
             "Bar diameter must be greater than zero."
         )
 
-    bar_area = calculate_bar_area(bar_diameter)
+    return (
+        number_of_bars
+        * calculate_bar_area(bar_diameter)
+    )
 
-    return number_of_bars * bar_area
 
+# =========================================================
+# REQUIRED NUMBER OF BARS
+# =========================================================
 
 def calculate_required_number_of_bars(
     required_area,
     bar_diameter
 ):
     """
-    Determine the minimum whole number of bars required
-    to provide at least the required steel area.
+    Determine the minimum whole number of bars
+    required to provide the required steel area.
 
-    Parameters:
-        required_area (float): Required steel area in mm²
-        bar_diameter (float): Bar diameter in mm
+    A minimum of two longitudinal bars is maintained.
 
     Returns:
-        int: Required number of bars
+        int: Required number of bars.
     """
 
     if required_area <= 0:
@@ -115,7 +124,9 @@ def calculate_required_number_of_bars(
             "Bar diameter must be greater than zero."
         )
 
-    bar_area = calculate_bar_area(bar_diameter)
+    bar_area = calculate_bar_area(
+        bar_diameter
+    )
 
     number_of_bars = math.ceil(
         required_area / bar_area
@@ -124,21 +135,24 @@ def calculate_required_number_of_bars(
     return max(number_of_bars, 2)
 
 
+# =========================================================
+# SUITABLE MAIN REINFORCEMENT
+# =========================================================
+
 def find_suitable_reinforcement(
     required_area,
     preferred_diameter=None
 ):
     """
-    Find a practical reinforcement arrangement that provides
-    at least the required steel area.
+    Find a practical reinforcement arrangement.
 
-    Parameters:
-        required_area (float): Required steel area in mm²
-        preferred_diameter (float, optional):
-            Preferred bar diameter in mm
+    If a preferred diameter is supplied, that diameter
+    is used. Otherwise available diameters are examined
+    and the arrangement with the smallest excess steel
+    area is selected.
 
     Returns:
-        dict: Recommended reinforcement arrangement.
+        dict: Reinforcement arrangement.
     """
 
     if required_area <= 0:
@@ -150,11 +164,13 @@ def find_suitable_reinforcement(
 
         if preferred_diameter not in AVAILABLE_BAR_DIAMETERS:
             raise ValueError(
-                "Preferred diameter is not in the available "
-                "bar diameter list."
+                "Preferred diameter is not in the "
+                "available bar diameter list."
             )
 
-        diameters = [preferred_diameter]
+        diameters = [
+            preferred_diameter
+        ]
 
     else:
         diameters = AVAILABLE_BAR_DIAMETERS
@@ -163,34 +179,57 @@ def find_suitable_reinforcement(
 
     for diameter in diameters:
 
-        number_of_bars = calculate_required_number_of_bars(
-            required_area,
-            diameter
+        number_of_bars = (
+            calculate_required_number_of_bars(
+                required_area,
+                diameter
+            )
         )
 
-        provided_area = calculate_provided_steel_area(
-            number_of_bars,
-            diameter
+        provided_area = (
+            calculate_provided_steel_area(
+                number_of_bars,
+                diameter
+            )
         )
 
-        excess_area = provided_area - required_area
+        excess_area = (
+            provided_area
+            - required_area
+        )
 
         option = {
-            "number_of_bars": number_of_bars,
-            "bar_diameter_mm": diameter,
-            "provided_area_mm2": provided_area,
-            "required_area_mm2": required_area,
-            "excess_area_mm2": excess_area
+            "number_of_bars":
+                number_of_bars,
+
+            "bar_diameter_mm":
+                diameter,
+
+            "provided_area_mm2":
+                provided_area,
+
+            "required_area_mm2":
+                required_area,
+
+            "excess_area_mm2":
+                excess_area
         }
 
         if best_option is None:
             best_option = option
 
-        elif excess_area < best_option["excess_area_mm2"]:
+        elif (
+            excess_area
+            < best_option["excess_area_mm2"]
+        ):
             best_option = option
 
     return best_option
 
+
+# =========================================================
+# CLEAR BAR SPACING
+# =========================================================
 
 def calculate_clear_spacing(
     beam_width,
@@ -200,9 +239,8 @@ def calculate_clear_spacing(
     number_of_bars
 ):
     """
-    Calculate approximate clear spacing between longitudinal bars.
-
-    Formula:
+    Calculate approximate horizontal clear spacing
+    between longitudinal bars.
 
         Available width =
         b - 2c - 2Ølink - nØbar
@@ -210,15 +248,8 @@ def calculate_clear_spacing(
         Clear spacing =
         Available width / (n - 1)
 
-    Parameters:
-        beam_width (float): Beam width in mm
-        concrete_cover (float): Concrete cover in mm
-        link_diameter (float): Link diameter in mm
-        main_bar_diameter (float): Main bar diameter in mm
-        number_of_bars (int): Number of main bars
-
     Returns:
-        float: Approximate clear spacing in mm
+        float: Clear spacing in mm.
     """
 
     if beam_width <= 0:
@@ -243,40 +274,38 @@ def calculate_clear_spacing(
 
     if number_of_bars < 2:
         raise ValueError(
-            "At least two bars are required to calculate spacing."
+            "At least two bars are required."
         )
 
     available_width = (
         beam_width
-        - (2 * concrete_cover)
-        - (2 * link_diameter)
-        - (number_of_bars * main_bar_diameter)
+        - 2 * concrete_cover
+        - 2 * link_diameter
+        - number_of_bars * main_bar_diameter
     )
 
     if available_width <= 0:
         raise ValueError(
-            "There is insufficient beam width for the selected bars."
+            "Insufficient beam width for the selected bars."
         )
 
-    clear_spacing = (
+    return (
         available_width
         / (number_of_bars - 1)
     )
 
-    return clear_spacing
 
+# =========================================================
+# MINIMUM BAR SPACING CHECK
+# =========================================================
 
 def check_bar_spacing(
     clear_spacing,
     minimum_spacing
 ):
     """
-    Check whether the calculated clear spacing satisfies
-    the specified minimum spacing.
-
-    Parameters:
-        clear_spacing (float): Clear spacing in mm
-        minimum_spacing (float): Required minimum spacing in mm
+    Check whether clear spacing satisfies
+    the specified minimum.
 
     Returns:
         bool: True if spacing is adequate.
@@ -295,19 +324,21 @@ def check_bar_spacing(
     return clear_spacing >= minimum_spacing
 
 
+# =========================================================
+# LINK AREA
+# =========================================================
+
 def calculate_link_area(
     number_of_legs,
     link_diameter
 ):
     """
-    Calculate the cross-sectional area of a shear link.
+    Calculate total steel area of a shear link.
 
-    Parameters:
-        number_of_legs (int): Number of effective link legs
-        link_diameter (float): Link diameter in mm
+        Asw = number of legs × Abar
 
     Returns:
-        float: Total link area in mm²
+        float: Link area in mm².
     """
 
     if number_of_legs < 2:
@@ -320,12 +351,15 @@ def calculate_link_area(
             "Link diameter must be greater than zero."
         )
 
-    single_bar_area = calculate_bar_area(
-        link_diameter
+    return (
+        number_of_legs
+        * calculate_bar_area(link_diameter)
     )
 
-    return number_of_legs * single_bar_area
 
+# =========================================================
+# PRELIMINARY LINK RECOMMENDATION
+# =========================================================
 
 def recommend_links(
     design_shear,
@@ -333,11 +367,9 @@ def recommend_links(
     effective_depth
 ):
     """
-    Provide a preliminary shear-link recommendation.
+    Provide a preliminary shear-link arrangement.
 
-    This is NOT a complete EC2 link-design calculation.
-    It provides a starting reinforcement arrangement based
-    on the beam's design shear.
+    This is NOT a complete shear reinforcement design.
 
     Returns:
         dict: Preliminary link recommendation.
@@ -358,7 +390,6 @@ def recommend_links(
             "Effective depth must be greater than zero."
         )
 
-    # Preliminary starting arrangements.
     if design_shear <= 50:
         diameter = 8
         spacing = 200
@@ -375,24 +406,45 @@ def recommend_links(
         diameter = 10
         spacing = 100
 
+    link_area = calculate_link_area(
+        number_of_legs=2,
+        link_diameter=diameter
+    )
+
     return {
-        "link_diameter_mm": diameter,
-        "number_of_legs": 2,
-        "link_spacing_mm": spacing,
-        "design_shear_kN": design_shear,
-        "note": (
+        "link_diameter_mm":
+            diameter,
+
+        "number_of_legs":
+            2,
+
+        "link_area_mm2":
+            link_area,
+
+        "link_spacing_mm":
+            spacing,
+
+        "design_shear_kN":
+            design_shear,
+
+        "note":
             "Preliminary link arrangement. "
-            "Complete shear reinforcement design is required."
-        )
+            "Complete shear reinforcement design "
+            "is required."
     }
 
+
+# =========================================================
+# REINFORCEMENT SCHEDULE
+# =========================================================
 
 def generate_reinforcement_schedule(
     required_area,
     beam_width,
     concrete_cover,
     link_diameter=8,
-    preferred_diameter=None
+    preferred_diameter=None,
+    minimum_spacing=20
 ):
     """
     Generate a preliminary beam reinforcement schedule.
@@ -401,14 +453,20 @@ def generate_reinforcement_schedule(
         dict: Main reinforcement and spacing information.
     """
 
-    reinforcement = find_suitable_reinforcement(
-        required_area,
-        preferred_diameter
+    reinforcement = (
+        find_suitable_reinforcement(
+            required_area,
+            preferred_diameter
+        )
     )
 
-    number_of_bars = reinforcement["number_of_bars"]
+    number_of_bars = (
+        reinforcement["number_of_bars"]
+    )
 
-    main_bar_diameter = reinforcement["bar_diameter_mm"]
+    main_bar_diameter = (
+        reinforcement["bar_diameter_mm"]
+    )
 
     spacing = calculate_clear_spacing(
         beam_width,
@@ -418,12 +476,39 @@ def generate_reinforcement_schedule(
         number_of_bars
     )
 
+    spacing_ok = check_bar_spacing(
+        spacing,
+        minimum_spacing
+    )
+
     return {
-        "main_bars": number_of_bars,
-        "main_bar_diameter_mm": main_bar_diameter,
+        "main_bars":
+            number_of_bars,
+
+        "main_bar_diameter_mm":
+            main_bar_diameter,
+
         "provided_steel_area_mm2":
-            reinforcement["provided_area_mm2"],
+            reinforcement[
+                "provided_area_mm2"
+            ],
+
         "required_steel_area_mm2":
-            reinforcement["required_area_mm2"],
-        "clear_spacing_mm": spacing
+            reinforcement[
+                "required_area_mm2"
+            ],
+
+        "excess_steel_area_mm2":
+            reinforcement[
+                "excess_area_mm2"
+            ],
+
+        "clear_spacing_mm":
+            spacing,
+
+        "minimum_spacing_mm":
+            minimum_spacing,
+
+        "spacing_adequate":
+            spacing_ok
     }
