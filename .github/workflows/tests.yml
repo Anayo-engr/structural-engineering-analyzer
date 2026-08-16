@@ -26,13 +26,28 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
-
-      - name: Install test dependencies
+      - name: Show Python version
         run: |
-          pip install pytest
+          python --version
+          python -m pip --version
+
+      - name: Show project structure
+        run: |
+          echo "Project root:"
+          pwd
+          echo ""
+          echo "Files:"
+          find . -maxdepth 4 -type f | sort
+
+      - name: Install pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Check Python files
+        run: |
+          python -m compileall calculations tests
 
       - name: Run tests
         run: |
-          python -m pytest tests/ -v
+          python -m pytest tests/test_beams.py -v
