@@ -8,12 +8,24 @@ from pathlib import Path
 
 # Add the project root to Python's import path.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+
+# =========================================================
+# BEAM LOAD IMPORTS
+# =========================================================
 
 from calculations.beam.beam_loads import (
     calculate_total_load,
     calculate_design_load
 )
+
+
+# =========================================================
+# BEAM ANALYSIS IMPORTS
+# =========================================================
 
 from calculations.beam.beam_analysis import (
     calculate_support_reactions,
@@ -21,10 +33,20 @@ from calculations.beam.beam_analysis import (
     calculate_max_bending_moment
 )
 
+
+# =========================================================
+# BEAM DESIGN IMPORTS
+# =========================================================
+
 from calculations.beam.beam_design import (
     calculate_effective_depth,
     calculate_required_steel_area
 )
+
+
+# =========================================================
+# BEAM REINFORCEMENT IMPORTS
+# =========================================================
 
 from calculations.beam.beam_reinforcement import (
     calculate_bar_area,
@@ -34,13 +56,23 @@ from calculations.beam.beam_reinforcement import (
 
 
 # =========================================================
+# COMPLETE BEAM CALCULATOR
+# =========================================================
+
+from calculations.beam.beam_calculator import (
+    calculate_beam
+)
+
+
+# =========================================================
 # BEAM LOAD TESTS
 # =========================================================
 
 def test_total_service_load():
     """
-    Test that dead load + live load gives the correct
-    service load.
+    Test dead load + live load.
+
+    10 + 5 = 15 kN/m
     """
 
     result = calculate_total_load(
@@ -53,9 +85,13 @@ def test_total_service_load():
 
 def test_design_load():
     """
-    Test the design load using:
+    Test design load:
 
         1.35G + 1.50Q
+
+        = 1.35(10) + 1.50(5)
+
+        = 20 kN/m
     """
 
     result = calculate_design_load(
@@ -72,14 +108,13 @@ def test_design_load():
 
 def test_support_reactions():
     """
-    Test reactions for:
+    For a simply supported beam:
 
         w = 20 kN/m
         L = 6 m
 
-    Reaction = wL/2
-              = 20 × 6 / 2
-              = 60 kN
+        R = wL/2
+          = 60 kN
     """
 
     left, right = calculate_support_reactions(
@@ -93,10 +128,9 @@ def test_support_reactions():
 
 def test_max_shear():
     """
-    Test maximum shear:
+    Maximum shear:
 
         V = wL/2
-          = 20 × 6 / 2
           = 60 kN
     """
 
@@ -110,12 +144,9 @@ def test_max_shear():
 
 def test_max_bending_moment():
     """
-    Test maximum bending moment:
+    Maximum bending moment:
 
         M = wL²/8
-
-          = 20 × 6² / 8
-
           = 90 kNm
     """
 
@@ -133,11 +164,11 @@ def test_max_bending_moment():
 
 def test_effective_depth():
     """
-    Test effective depth:
+    Effective depth:
 
         d = h - c - Ø/2
 
-          = 500 - 25 - 8
+          = 500 - 25 - 16/2
 
           = 467 mm
     """
@@ -153,8 +184,7 @@ def test_effective_depth():
 
 def test_required_steel_area():
     """
-    Test the reinforcement calculation with a known
-    design moment.
+    Check that required reinforcement is positive.
     """
 
     result = calculate_required_steel_area(
@@ -172,7 +202,11 @@ def test_required_steel_area():
 
 def test_bar_area():
     """
-    Test the area of a 16 mm diameter reinforcement bar.
+    Area of one 16 mm bar:
+
+        A = πØ²/4
+
+        = 201.06 mm²
     """
 
     result = calculate_bar_area(16)
@@ -182,7 +216,10 @@ def test_bar_area():
 
 def test_provided_steel_area():
     """
-    Test the area provided by 4Y16 bars.
+    Area provided by 4Y16:
+
+        4 × 201.06
+        = 804.25 mm²
     """
 
     result = calculate_provided_steel_area(
@@ -195,8 +232,13 @@ def test_provided_steel_area():
 
 def test_required_number_of_bars():
     """
-    Test that the program determines how many bars are
-    needed to satisfy a required steel area.
+    Required area = 750 mm².
+
+    3Y16 = 603.19 mm²  -> insufficient
+
+    4Y16 = 804.25 mm²  -> sufficient
+
+    Therefore 4 bars are required.
     """
 
     result = calculate_required_number_of_bars(
@@ -208,15 +250,16 @@ def test_required_number_of_bars():
 
 
 # =========================================================
-# ERROR VALIDATION TESTS
+# INPUT VALIDATION TESTS
 # =========================================================
 
 def test_negative_load_rejected():
     """
-    Negative loads should not be accepted.
+    Negative loads must be rejected.
     """
 
     try:
+
         calculate_total_load(
             dead_load=-10,
             live_load=5
@@ -225,15 +268,17 @@ def test_negative_load_rejected():
         assert False
 
     except ValueError:
+
         assert True
 
 
 def test_zero_span_rejected():
     """
-    A beam span of zero must be rejected.
+    A zero beam span must be rejected.
     """
 
     try:
+
         calculate_max_bending_moment(
             load=20,
             span=0
@@ -242,10 +287,13 @@ def test_zero_span_rejected():
         assert False
 
     except ValueError:
+
         assert True
 
-from calculations.beam.beam_calculator import calculate_beam
 
+# =========================================================
+# COMPLETE BEAM CALCULATION TEST
+# =========================================================
 
 def test_complete_beam_calculation():
     """
@@ -265,6 +313,7 @@ def test_complete_beam_calculation():
         link_diameter=8
     )
 
+    # Check major result sections exist.
     assert "beam" in result
     assert "materials" in result
     assert "loads" in result
@@ -274,17 +323,24 @@ def test_complete_beam_calculation():
     assert "shear" in result
     assert "links" in result
 
+    # Check basic beam information.
     assert result["beam"]["span_m"] == 6
+
+    # Check loads.
     assert result["loads"]["service_load_kN_per_m"] == 15
     assert result["loads"]["design_load_kN_per_m"] == 20
 
+    # Check structural analysis.
     assert result["analysis"]["left_reaction_kN"] == 60
     assert result["analysis"]["right_reaction_kN"] == 60
     assert result["analysis"]["maximum_shear_kN"] == 60
     assert result["analysis"]["maximum_bending_moment_kNm"] == 90
 
+    # Check bending design.
     assert result["design"]["design_bending_moment_kNm"] == 90
 
+    # Check reinforcement.
     assert result["reinforcement"]["provided_steel_area_mm2"] > 0
 
+    # Check shear.
     assert result["shear"]["concrete_shear_resistance_kN"] > 0
