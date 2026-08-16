@@ -11,9 +11,6 @@ This module combines:
 - Shear design
 - Reinforcement selection
 
-It provides one main function that can later be
-called by the backend/API.
-
 Design basis:
 - Preliminary Eurocode-oriented approach
 - Simply supported reinforced-concrete beam
@@ -22,20 +19,35 @@ Design basis:
 IMPORTANT:
 This is a preliminary calculation engine.
 Final structural design must include all applicable
-code checks, combinations, detailing requirements,
+code checks, load combinations, detailing requirements,
 serviceability checks, and professional engineering review.
 """
+
+
+# =========================================================
+# BEAM LOADS
+# =========================================================
 
 from .beam_loads import (
     calculate_total_load,
     calculate_design_load
 )
 
+
+# =========================================================
+# BEAM ANALYSIS
+# =========================================================
+
 from .beam_analysis import (
     calculate_support_reactions,
     calculate_max_shear,
     calculate_max_bending_moment
 )
+
+
+# =========================================================
+# BEAM DESIGN
+# =========================================================
 
 from .beam_design import (
     calculate_effective_depth,
@@ -45,12 +57,24 @@ from .beam_design import (
     select_required_steel_area
 )
 
+
+# =========================================================
+# BEAM SHEAR
+# =========================================================
+
 from .beam_shear import (
+    calculate_design_shear_force,
     calculate_shear_stress,
     calculate_longitudinal_reinforcement_ratio,
     calculate_concrete_shear_resistance,
+    calculate_maximum_shear_resistance,
     check_shear_capacity
 )
+
+
+# =========================================================
+# BEAM REINFORCEMENT
+# =========================================================
 
 from .beam_reinforcement import (
     find_suitable_reinforcement,
@@ -58,6 +82,10 @@ from .beam_reinforcement import (
     recommend_links
 )
 
+
+# =========================================================
+# COMPLETE BEAM CALCULATOR
+# =========================================================
 
 def calculate_beam(
     beam_width,
@@ -112,7 +140,7 @@ def calculate_beam(
     """
 
     # =========================================================
-    # 1. BASIC VALIDATION
+    # 1. INPUT VALIDATION
     # =========================================================
 
     if beam_width <= 0:
@@ -233,7 +261,7 @@ def calculate_beam(
     )
 
     # =========================================================
-    # 9. REQUIRED BENDING REINFORCEMENT
+    # 9. REQUIRED STEEL AREA
     # =========================================================
 
     required_steel = calculate_required_steel_area(
@@ -243,7 +271,7 @@ def calculate_beam(
     )
 
     # =========================================================
-    # 10. MINIMUM REINFORCEMENT
+    # 10. MINIMUM STEEL AREA
     # =========================================================
 
     minimum_steel = calculate_minimum_steel_area(
@@ -262,7 +290,7 @@ def calculate_beam(
     )
 
     # =========================================================
-    # 12. SELECT PRACTICAL REINFORCEMENT
+    # 12. MAIN REINFORCEMENT
     # =========================================================
 
     reinforcement = find_suitable_reinforcement(
@@ -283,17 +311,27 @@ def calculate_beam(
     )
 
     # =========================================================
-    # 14. SHEAR STRESS
+    # 14. DESIGN SHEAR FORCE
+    # =========================================================
+
+    design_shear = calculate_design_shear_force(
+        dead_load,
+        live_load,
+        span
+    )
+
+    # =========================================================
+    # 15. SHEAR STRESS
     # =========================================================
 
     shear_stress = calculate_shear_stress(
-        maximum_shear,
+        design_shear,
         beam_width,
         effective_depth
     )
 
     # =========================================================
-    # 15. LONGITUDINAL REINFORCEMENT RATIO
+    # 16. LONGITUDINAL REINFORCEMENT RATIO
     # =========================================================
 
     reinforcement_ratio = (
@@ -305,7 +343,7 @@ def calculate_beam(
     )
 
     # =========================================================
-    # 16. CONCRETE SHEAR RESISTANCE
+    # 17. CONCRETE SHEAR RESISTANCE
     # =========================================================
 
     concrete_shear_resistance = (
@@ -318,35 +356,64 @@ def calculate_beam(
     )
 
     # =========================================================
-    # 17. SHEAR CAPACITY CHECK
+    # 18. MAXIMUM SHEAR RESISTANCE
     # =========================================================
 
-    shear_check = check_shear_capacity(
-        maximum_shear,
-        concrete_shear_resistance
+    maximum_shear_resistance = (
+        calculate_maximum_shear_resistance(
+            beam_width,
+            effective_depth,
+            concrete_strength
+        )
     )
 
     # =========================================================
-    # 18. PRELIMINARY SHEAR LINKS
+    # 19. SHEAR CAPACITY CHECK
+    # =========================================================
+
+    shear_check = check_shear_capacity(
+        design_shear,
+        concrete_shear_resistance,
+        maximum_shear_resistance
+    )
+
+    # =========================================================
+    # 20. PRELIMINARY SHEAR LINKS
     # =========================================================
 
     links = recommend_links(
-        maximum_shear,
+        design_shear,
         beam_width,
         effective_depth
     )
 
     # =========================================================
-    # 19. FINAL RESULT
+    # 21. FINAL RESULT
     # =========================================================
 
     return {
+
+        # -----------------------------------------------------
+        # BEAM
+        # -----------------------------------------------------
+
         "beam": {
-            "width_mm": beam_width,
-            "overall_depth_mm": overall_depth,
-            "effective_depth_mm": effective_depth,
-            "span_m": span
+            "width_mm":
+                beam_width,
+
+            "overall_depth_mm":
+                overall_depth,
+
+            "effective_depth_mm":
+                effective_depth,
+
+            "span_m":
+                span
         },
+
+        # -----------------------------------------------------
+        # MATERIALS
+        # -----------------------------------------------------
 
         "materials": {
             "concrete_strength_N_per_mm2":
@@ -355,6 +422,10 @@ def calculate_beam(
             "steel_strength_N_per_mm2":
                 steel_strength
         },
+
+        # -----------------------------------------------------
+        # LOADS
+        # -----------------------------------------------------
 
         "loads": {
             "dead_load_kN_per_m":
@@ -370,6 +441,10 @@ def calculate_beam(
                 design_load
         },
 
+        # -----------------------------------------------------
+        # STRUCTURAL ANALYSIS
+        # -----------------------------------------------------
+
         "analysis": {
             "left_reaction_kN":
                 left_reaction,
@@ -383,6 +458,10 @@ def calculate_beam(
             "maximum_bending_moment_kNm":
                 maximum_moment
         },
+
+        # -----------------------------------------------------
+        # BENDING DESIGN
+        # -----------------------------------------------------
 
         "design": {
             "design_bending_moment_kNm":
@@ -398,21 +477,43 @@ def calculate_beam(
                 governing_steel
         },
 
+        # -----------------------------------------------------
+        # MAIN REINFORCEMENT
+        # -----------------------------------------------------
+
         "reinforcement": {
             "number_of_main_bars":
-                reinforcement["number_of_bars"],
+                reinforcement[
+                    "number_of_bars"
+                ],
 
             "main_bar_diameter_mm":
-                reinforcement["bar_diameter_mm"],
+                reinforcement[
+                    "bar_diameter_mm"
+                ],
 
             "provided_steel_area_mm2":
-                reinforcement["provided_area_mm2"],
+                reinforcement[
+                    "provided_area_mm2"
+                ],
+
+            "required_steel_area_mm2":
+                reinforcement[
+                    "required_area_mm2"
+                ],
 
             "clear_spacing_mm":
                 clear_spacing
         },
 
+        # -----------------------------------------------------
+        # SHEAR
+        # -----------------------------------------------------
+
         "shear": {
+            "design_shear_kN":
+                design_shear,
+
             "shear_stress_N_per_mm2":
                 shear_stress,
 
@@ -422,26 +523,58 @@ def calculate_beam(
             "concrete_shear_resistance_kN":
                 concrete_shear_resistance,
 
+            "maximum_shear_resistance_kN":
+                maximum_shear_resistance,
+
             "utilization_ratio":
-                shear_check["utilization_ratio"],
+                shear_check[
+                    "utilization_ratio"
+                ],
+
+            "maximum_utilization_ratio":
+                shear_check[
+                    "maximum_utilization_ratio"
+                ],
 
             "passes_concrete_shear_check":
                 shear_check[
                     "passes_concrete_shear_check"
+                ],
+
+            "passes_maximum_shear_check":
+                shear_check[
+                    "passes_maximum_shear_check"
                 ]
         },
 
+        # -----------------------------------------------------
+        # SHEAR LINKS
+        # -----------------------------------------------------
+
         "links": {
             "diameter_mm":
-                links["link_diameter_mm"],
+                links[
+                    "link_diameter_mm"
+                ],
 
             "number_of_legs":
-                links["number_of_legs"],
+                links[
+                    "number_of_legs"
+                ],
+
+            "link_area_mm2":
+                links[
+                    "link_area_mm2"
+                ],
 
             "spacing_mm":
-                links["link_spacing_mm"],
+                links[
+                    "link_spacing_mm"
+                ],
 
             "note":
-                links["note"]
+                links[
+                    "note"
+                ]
         }
     }
