@@ -243,3 +243,48 @@ def test_zero_span_rejected():
 
     except ValueError:
         assert True
+
+from calculations.beams.beam_calculator import calculate_beam
+
+
+def test_complete_beam_calculation():
+    """
+    Test the complete beam calculation controller.
+    """
+
+    result = calculate_beam(
+        beam_width=300,
+        overall_depth=500,
+        concrete_cover=25,
+        main_bar_diameter=16,
+        dead_load=10,
+        live_load=5,
+        span=6,
+        concrete_strength=25,
+        steel_strength=500,
+        link_diameter=8
+    )
+
+    assert "beam" in result
+    assert "materials" in result
+    assert "loads" in result
+    assert "analysis" in result
+    assert "design" in result
+    assert "reinforcement" in result
+    assert "shear" in result
+    assert "links" in result
+
+    assert result["beam"]["span_m"] == 6
+    assert result["loads"]["service_load_kN_per_m"] == 15
+    assert result["loads"]["design_load_kN_per_m"] == 20
+
+    assert result["analysis"]["left_reaction_kN"] == 60
+    assert result["analysis"]["right_reaction_kN"] == 60
+    assert result["analysis"]["maximum_shear_kN"] == 60
+    assert result["analysis"]["maximum_bending_moment_kNm"] == 90
+
+    assert result["design"]["design_bending_moment_kNm"] == 90
+
+    assert result["reinforcement"]["provided_steel_area_mm2"] > 0
+
+    assert result["shear"]["concrete_shear_resistance_kN"] > 0
