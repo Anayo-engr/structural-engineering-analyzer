@@ -480,3 +480,36 @@ def calculate_design_capacity(
 
     # Convert N to kN.
     return total_capacity_n / 1000
+
+def check_column_capacity(
+    design_axial_load,
+    design_capacity
+):
+    """
+    Check whether the preliminary column design capacity
+    is adequate for the applied design axial load.
+
+    Parameters:
+        design_axial_load (float):
+            Design axial load in kN.
+
+        design_capacity (float):
+            Preliminary design axial capacity in kN.
+
+    Returns:
+        bool:
+            True if the column capacity is adequate,
+            otherwise False.
+    """
+
+    if design_axial_load <= 0:
+        raise ValueError(
+            "Design axial load must be greater than zero."
+        )
+
+    if design_capacity <= 0:
+        raise ValueError(
+            "Design capacity must be greater than zero."
+        )
+
+    return design_capacity >= design_axial_load
