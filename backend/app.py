@@ -2,11 +2,8 @@
 Structural Engineering Analyzer
 Backend API
 
-This module provides the backend API for the
-Structural Engineering Analyzer.
-
-It connects the frontend to the calculation engine
-for beam and column calculations.
+Connects the frontend to the beam and column
+calculation engines.
 """
 
 from flask import Flask, jsonify, request
@@ -29,7 +26,7 @@ app = Flask(__name__)
 @app.route("/", methods=["GET"])
 def home():
     """
-    Basic API health check.
+    Check whether the backend API is running.
     """
 
     return jsonify({
@@ -46,22 +43,21 @@ def home():
 @app.route("/api/beam/calculate", methods=["POST"])
 def calculate_beam_api():
     """
-    Receive beam parameters and perform a beam calculation.
+    Perform a beam calculation.
 
-    Expected JSON input:
+    Required parameters:
+        beam_width
+        overall_depth
+        concrete_cover
+        main_bar_diameter
+        dead_load
+        live_load
+        span
 
-        {
-            "beam_width": 300,
-            "overall_depth": 500,
-            "concrete_cover": 25,
-            "main_bar_diameter": 16,
-            "dead_load": 10,
-            "live_load": 5,
-            "span": 6,
-            "concrete_strength": 25,
-            "steel_strength": 500,
-            "link_diameter": 8
-        }
+    Optional parameters:
+        concrete_strength
+        steel_strength
+        link_diameter
     """
 
     try:
@@ -77,7 +73,9 @@ def calculate_beam_api():
             beam_width=float(data["beam_width"]),
             overall_depth=float(data["overall_depth"]),
             concrete_cover=float(data["concrete_cover"]),
-            main_bar_diameter=float(data["main_bar_diameter"]),
+            main_bar_diameter=float(
+                data["main_bar_diameter"]
+            ),
             dead_load=float(data["dead_load"]),
             live_load=float(data["live_load"]),
             span=float(data["span"]),
@@ -102,10 +100,13 @@ def calculate_beam_api():
 
         return jsonify({
             "success": False,
-            "error": f"Missing required parameter: {error.args[0]}"
+            "error": (
+                f"Missing required parameter: "
+                f"{error.args[0]}"
+            )
         }), 400
 
-    except ValueError as error:
+    except (ValueError, TypeError) as error:
 
         return jsonify({
             "success": False,
@@ -128,10 +129,18 @@ def calculate_beam_api():
 @app.route("/api/column/calculate", methods=["POST"])
 def calculate_column_api():
     """
-    Receive column parameters and perform a column calculation.
+    Perform a column calculation.
 
-    Expected JSON input will depend on the parameters
-    supported by calculate_column().
+    Required parameters:
+        column_width
+        column_depth
+        dead_load
+        live_load
+
+    Optional parameters:
+        concrete_strength
+        steel_strength
+        preferred_bar_diameter
     """
 
     try:
@@ -144,7 +153,27 @@ def calculate_column_api():
             }), 400
 
         result = calculate_column(
-            **data
+            column_width=float(
+                data["column_width"]
+            ),
+            column_depth=float(
+                data["column_depth"]
+            ),
+            dead_load=float(
+                data["dead_load"]
+            ),
+            live_load=float(
+                data["live_load"]
+            ),
+            concrete_strength=float(
+                data.get("concrete_strength", 25)
+            ),
+            steel_strength=float(
+                data.get("steel_strength", 500)
+            ),
+            preferred_bar_diameter=float(
+                data.get("preferred_bar_diameter", 16)
+            )
         )
 
         return jsonify({
@@ -153,14 +182,17 @@ def calculate_column_api():
             "result": result
         })
 
-    except TypeError as error:
+    except KeyError as error:
 
         return jsonify({
             "success": False,
-            "error": str(error)
+            "error": (
+                f"Missing required parameter: "
+                f"{error.args[0]}"
+            )
         }), 400
 
-    except ValueError as error:
+    except (ValueError, TypeError) as error:
 
         return jsonify({
             "success": False,
@@ -183,7 +215,7 @@ def calculate_column_api():
 @app.errorhandler(404)
 def page_not_found(error):
     """
-    Handle unknown API routes.
+    Handle unknown routes.
     """
 
     return jsonify({
