@@ -1,1 +1,4 @@
-
+Fastapi
+uvicorn[standard]
+pydantic
+pytest
