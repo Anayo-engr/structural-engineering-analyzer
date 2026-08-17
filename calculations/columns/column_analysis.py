@@ -31,22 +31,8 @@ def calculate_design_axial_load(
 
         NEd = 1.35G + 1.50Q
 
-    Parameters:
-        dead_load (float):
-            Characteristic dead load in kN.
-
-        live_load (float):
-            Characteristic live load in kN.
-
-        dead_load_factor (float):
-            Partial factor applied to dead load.
-
-        live_load_factor (float):
-            Partial factor applied to live load.
-
     Returns:
-        float:
-            Design axial load in kN.
+        float: Design axial load in kN.
     """
 
     if dead_load < 0:
@@ -75,19 +61,23 @@ def calculate_design_axial_load(
     )
 
 
-def calculate_column_area(width, depth):
+def calculate_column_area(
+    column_width,
+    column_depth
+):
     """
-    Calculate the gross cross-sectional area of a rectangular column.
+    Calculate the gross cross-sectional area
+    of a rectangular column.
 
     Formula:
 
         Ac = b × h
 
     Parameters:
-        width (float):
+        column_width (float):
             Column width in mm.
 
-        depth (float):
+        column_depth (float):
             Column depth in mm.
 
     Returns:
@@ -95,17 +85,17 @@ def calculate_column_area(width, depth):
             Gross concrete area in mm².
     """
 
-    if width <= 0:
+    if column_width <= 0:
         raise ValueError(
             "Column width must be greater than zero."
         )
 
-    if depth <= 0:
+    if column_depth <= 0:
         raise ValueError(
             "Column depth must be greater than zero."
         )
 
-    return width * depth
+    return column_width * column_depth
 
 
 def calculate_axial_stress(
@@ -158,16 +148,8 @@ def calculate_slenderness_ratio(
 
         lambda = l0 / i
 
-    Parameters:
-        effective_length (float):
-            Effective column length in mm.
-
-        radius_of_gyration (float):
-            Radius of gyration in mm.
-
     Returns:
-        float:
-            Slenderness ratio.
+        float: Slenderness ratio.
     """
 
     if effective_length <= 0:
@@ -196,22 +178,8 @@ def calculate_radius_of_gyration(
         iy = h / sqrt(12)
         iz = b / sqrt(12)
 
-    Parameters:
-        width (float):
-            Column width in mm.
-
-        depth (float):
-            Column depth in mm.
-
-        axis (str):
-            Axis about which the radius is calculated.
-
-            "y" uses the column depth.
-            "z" uses the column width.
-
     Returns:
-        float:
-            Radius of gyration in mm.
+        float: Radius of gyration in mm.
     """
 
     if width <= 0:
