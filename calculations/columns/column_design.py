@@ -401,3 +401,82 @@ def calculate_column_design(
         "reinforcement_ratio":
             reinforcement_ratio
     }
+
+def calculate_design_capacity(
+    gross_area,
+    steel_area,
+    concrete_strength,
+    steel_strength=500,
+    concrete_capacity_factor=0.35,
+    steel_contribution_factor=0.87
+):
+    """
+    Calculate the preliminary design axial capacity of a
+    reinforced-concrete column.
+
+    Formula:
+
+        NEd,Rd = alpha_c × fck × Ac
+               + alpha_s × fy × As
+
+    Parameters:
+        gross_area (float): Gross concrete area in mm².
+        steel_area (float): Longitudinal steel area in mm².
+        concrete_strength (float): Concrete strength fck in N/mm².
+        steel_strength (float): Steel strength fy in N/mm².
+        concrete_capacity_factor (float): Concrete contribution factor.
+        steel_contribution_factor (float): Steel contribution factor.
+
+    Returns:
+        float: Preliminary design capacity in kN.
+    """
+
+    if gross_area <= 0:
+        raise ValueError(
+            "Gross area must be greater than zero."
+        )
+
+    if steel_area < 0:
+        raise ValueError(
+            "Steel area cannot be negative."
+        )
+
+    if concrete_strength <= 0:
+        raise ValueError(
+            "Concrete strength must be greater than zero."
+        )
+
+    if steel_strength <= 0:
+        raise ValueError(
+            "Steel strength must be greater than zero."
+        )
+
+    if concrete_capacity_factor <= 0:
+        raise ValueError(
+            "Concrete capacity factor must be greater than zero."
+        )
+
+    if steel_contribution_factor <= 0:
+        raise ValueError(
+            "Steel contribution factor must be greater than zero."
+        )
+
+    concrete_capacity = (
+        concrete_capacity_factor
+        * concrete_strength
+        * gross_area
+    )
+
+    steel_capacity = (
+        steel_contribution_factor
+        * steel_strength
+        * steel_area
+    )
+
+    total_capacity_n = (
+        concrete_capacity
+        + steel_capacity
+    )
+
+    # Convert N to kN.
+    return total_capacity_n / 1000
