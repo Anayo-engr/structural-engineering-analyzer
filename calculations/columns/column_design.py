@@ -403,7 +403,7 @@ def calculate_column_design(
     }
 
 def calculate_design_capacity(
-    gross_area,
+    column_area,
     steel_area,
     concrete_strength,
     steel_strength=500,
@@ -411,29 +411,23 @@ def calculate_design_capacity(
     steel_contribution_factor=0.87
 ):
     """
-    Calculate the preliminary design axial capacity of a
-    reinforced-concrete column.
+    Calculate the preliminary design axial capacity
+    of a reinforced-concrete column.
 
     Formula:
 
-        NEd,Rd = alpha_c × fck × Ac
-               + alpha_s × fy × As
-
-    Parameters:
-        gross_area (float): Gross concrete area in mm².
-        steel_area (float): Longitudinal steel area in mm².
-        concrete_strength (float): Concrete strength fck in N/mm².
-        steel_strength (float): Steel strength fy in N/mm².
-        concrete_capacity_factor (float): Concrete contribution factor.
-        steel_contribution_factor (float): Steel contribution factor.
+        NEd,Rd =
+            alpha_c × fck × Ac
+            + alpha_s × fy × As
 
     Returns:
-        float: Preliminary design capacity in kN.
+        float:
+            Preliminary design capacity in kN.
     """
 
-    if gross_area <= 0:
+    if column_area <= 0:
         raise ValueError(
-            "Gross area must be greater than zero."
+            "Column area must be greater than zero."
         )
 
     if steel_area < 0:
@@ -464,7 +458,7 @@ def calculate_design_capacity(
     concrete_capacity = (
         concrete_capacity_factor
         * concrete_strength
-        * gross_area
+        * column_area
     )
 
     steel_capacity = (
@@ -481,30 +475,23 @@ def calculate_design_capacity(
     # Convert N to kN.
     return total_capacity_n / 1000
 
+
 def check_column_capacity(
-    design_axial_load,
+    design_load,
     design_capacity
 ):
     """
     Check whether the preliminary column design capacity
-    is adequate for the applied design axial load.
-
-    Parameters:
-        design_axial_load (float):
-            Design axial load in kN.
-
-        design_capacity (float):
-            Preliminary design axial capacity in kN.
+    is adequate for the applied design load.
 
     Returns:
-        bool:
-            True if the column capacity is adequate,
-            otherwise False.
+        dict:
+            Capacity check results.
     """
 
-    if design_axial_load <= 0:
+    if design_load <= 0:
         raise ValueError(
-            "Design axial load must be greater than zero."
+            "Design load must be greater than zero."
         )
 
     if design_capacity <= 0:
@@ -512,4 +499,15 @@ def check_column_capacity(
             "Design capacity must be greater than zero."
         )
 
-    return design_capacity >= design_axial_load
+    utilization_ratio = (
+        design_load / design_capacity
+    )
+
+    passes_capacity_check = (
+        utilization_ratio <= 1.0
+    )
+
+    return {
+        "utilization_ratio": utilization_ratio,
+        "passes_capacity_check": passes_capacity_check
+    }
