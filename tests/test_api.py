@@ -10,6 +10,10 @@ from backend.main import app
 client = TestClient(app)
 
 
+# =========================================================
+# ROOT AND HEALTH TESTS
+# =========================================================
+
 def test_root_endpoint():
     """Test that the API root endpoint is working."""
 
@@ -20,6 +24,7 @@ def test_root_endpoint():
     data = response.json()
 
     assert data["status"] == "success"
+    assert "message" in data
 
 
 def test_health_endpoint():
@@ -33,6 +38,10 @@ def test_health_endpoint():
 
     assert data["status"] == "healthy"
 
+
+# =========================================================
+# BEAM API TEST
+# =========================================================
 
 def test_beam_calculation_endpoint():
     """Test the beam calculation API endpoint."""
@@ -59,6 +68,17 @@ def test_beam_calculation_endpoint():
 
     assert isinstance(data, dict)
 
+    # Confirm major beam result sections exist.
+    assert "beam" in data
+    assert "loads" in data
+    assert "analysis" in data
+    assert "design" in data
+    assert "reinforcement" in data
+
+
+# =========================================================
+# COLUMN API TEST
+# =========================================================
 
 def test_column_calculation_endpoint():
     """Test the column calculation API endpoint."""
@@ -82,6 +102,19 @@ def test_column_calculation_endpoint():
 
     assert isinstance(data, dict)
 
+    # Confirm major column result sections exist.
+    assert "column" in data
+    assert "materials" in data
+    assert "loads" in data
+    assert "analysis" in data
+    assert "design" in data
+    assert "reinforcement" in data
+    assert "capacity" in data
+
+
+# =========================================================
+# INPUT VALIDATION TESTS
+# =========================================================
 
 def test_invalid_beam_input():
     """Test that invalid beam input is rejected."""
