@@ -1,1 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Structural Engineering Analyzer</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <span class="logo-mark">SE</span>
+                <div>
+                    <h1>Structural Engineering Analyzer</h1>
+                    <p>Preliminary Structural Calculations</p>
+                </div>
+            </div>
+
+            <div class="api-status">
+                <span id="status-dot"></span>
+                <span id="status-text">Checking API...</span>
+            </div>
+        </div>
+    </header>
+
+
+    <main class="container">
+
+        <section class="hero">
+            <h2>Structural Calculation Platform</h2>
+            <p>
+                Perform preliminary beam and column structural calculations
+                through a simple engineering interface.
+            </p>
+        </section>
+
+
+        <!-- BEAM CALCULATOR -->
+        <section class="calculator-card">
+
+            <div class="section-heading">
+                <h2>Beam Calculator</h2>
+                <p>Enter the required beam parameters below.</p>
+            </div>
+
+            <form id="beam-form">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="beam-width">Beam Width</label>
+                        <input
+                            type="number"
+                            id="beam-width"
+                            name="beam_width"
+                            placeholder="e.g. 300"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="overall-depth">Overall Depth</label>
+                        <input
+                            type="number"
+                            id="overall-depth"
+                            name="overall_depth"
+                            placeholder="e.g. 500"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="concrete-cover">Concrete Cover</label>
+                        <input
+                            type="number"
+                            id="concrete-cover"
+                            name="concrete_cover"
+                            placeholder="e.g. 25"
+                            min="0"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="main-bar-diameter">Main Bar Diameter</label>
+                        <input
+                            type="number"
+                            id="main-bar-diameter"
+                            name="main_bar_diameter"
+                            placeholder="e.g. 16"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dead-load">Dead Load</label>
+                        <input
+                            type="number"
+                            id="dead-load"
+                            name="dead_load"
+                            placeholder="e.g. 10"
+                            min="0"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="live-load">Live Load</label>
+                        <input
+                            type="number"
+                            id="live-load"
+                            name="live_load"
+                            placeholder="e.g. 5"
+                            min="0"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="beam-span">Span</label>
+                        <input
+                            type="number"
+                            id="beam-span"
+                            name="span"
+                            placeholder="e.g. 5"
+                            min="0.1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="concrete-strength">Concrete Strength</label>
+                        <input
+                            type="number"
+                            id="concrete-strength"
+                            name="concrete_strength"
+                            value="25"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="steel-strength">Steel Strength</label>
+                        <input
+                            type="number"
+                            id="steel-strength"
+                            name="steel_strength"
+                            value="500"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="link-diameter">Link Diameter</label>
+                        <input
+                            type="number"
+                            id="link-diameter"
+                            name="link_diameter"
+                            value="8"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-button">
+                        Calculate Beam
+                    </button>
+
+                    <button type="reset" class="secondary-button">
+                        Clear
+                    </button>
+                </div>
+
+            </form>
+
+            <div id="beam-result" class="result-panel hidden">
+                <div class="result-header">
+                    <h3>Beam Calculation Results</h3>
+                </div>
+
+                <div id="beam-result-content"></div>
+            </div>
+
+        </section>
+
+
+        <!-- COLUMN CALCULATOR -->
+        <section class="calculator-card">
+
+            <div class="section-heading">
+                <h2>Column Calculator</h2>
+                <p>Enter the required column parameters below.</p>
+            </div>
+
+            <form id="column-form">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="column-width">Column Width</label>
+                        <input
+                            type="number"
+                            id="column-width"
+                            name="column_width"
+                            placeholder="e.g. 300"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="column-depth">Column Depth</label>
+                        <input
+                            type="number"
+                            id="column-depth"
+                            name="column_depth"
+                            placeholder="e.g. 300"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="column-height">Column Height</label>
+                        <input
+                            type="number"
+                            id="column-height"
+                            name="column_height"
+                            placeholder="e.g. 3000"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="column-cover">Concrete Cover</label>
+                        <input
+                            type="number"
+                            id="column-cover"
+                            name="concrete_cover"
+                            placeholder="e.g. 40"
+                            min="0"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="column-load">Axial Load</label>
+                        <input
+                            type="number"
+                            id="column-load"
+                            name="axial_load"
+                            placeholder="e.g. 500"
+                            min="0"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="column-concrete-strength">
+                            Concrete Strength
+                        </label>
+
+                        <input
+                            type="number"
+                            id="column-concrete-strength"
+                            name="concrete_strength"
+                            value="25"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="column-steel-strength">
+                            Steel Strength
+                        </label>
+
+                        <input
+                            type="number"
+                            id="column-steel-strength"
+                            name="steel_strength"
+                            value="500"
+                            min="1"
+                            step="any"
+                            required
+                        >
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-button">
+                        Calculate Column
+                    </button>
+
+                    <button type="reset" class="secondary-button">
+                        Clear
+                    </button>
+                </div>
+
+            </form>
+
+            <div id="column-result" class="result-panel hidden">
+                <div class="result-header">
+                    <h3>Column Calculation Results</h3>
+                </div>
+
+                <div id="column-result-content"></div>
+            </div>
+
+        </section>
+
+
+        <section class="notice">
+            <h3>Important Notice</h3>
+
+            <p>
+                This application is intended for preliminary structural
+                engineering calculations and analysis. Results should be
+                independently reviewed and verified by a qualified structural
+                engineer before being used for construction or final design.
+            </p>
+        </section>
+
+    </main>
+
+
+    <footer class="footer">
+        <div class="container">
+            <p>
+                © 2026 Structural Engineering Analyzer.
+                Preliminary engineering analysis tool.
+            </p>
+        </div>
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
