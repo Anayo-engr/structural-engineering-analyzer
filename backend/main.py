@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from calculations.beams.beam_calculator import calculate_beam
+from calculations.columns.column_calculator import calculate_column
 
 app = FastAPI(
     title="Structural Engineering Analyzer API",
@@ -51,6 +52,32 @@ def calculate_beam_endpoint(
         concrete_strength=concrete_strength,
         steel_strength=steel_strength,
         link_diameter=link_diameter
+    )
+
+    return result
+
+@app.post("/calculate/column")
+def calculate_column_endpoint(
+    column_width: float,
+    column_depth: float,
+    dead_load: float,
+    live_load: float,
+    concrete_strength: float = 25,
+    steel_strength: float = 500,
+    preferred_bar_diameter: float = 16
+):
+    """
+    Calculate preliminary reinforced-concrete column design.
+    """
+
+    result = calculate_column(
+        column_width=column_width,
+        column_depth=column_depth,
+        dead_load=dead_load,
+        live_load=live_load,
+        concrete_strength=concrete_strength,
+        steel_strength=steel_strength,
+        preferred_bar_diameter=preferred_bar_diameter
     )
 
     return result
