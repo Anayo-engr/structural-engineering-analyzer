@@ -1,4 +1,5 @@
-Fastapi
+fastapi
 uvicorn[standard]
 pydantic
 pytest
+httpx2
