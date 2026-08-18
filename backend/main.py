@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from calculations.beams.beam_calculator import calculate_beam
+from calculations.beam.beam_calculator import calculate_beam
 from calculations.columns.column_calculator import calculate_column
 
 from backend.schemas import (
